@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebApp</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Стиль для элемента загрузки */
+    #loadingOverlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      text-align: center;
+      color: white;
+      font-size: 20px;
+    }
+    #loadingOverlay .spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="top__block">
+    <div class="app__logo">
+      <img src="img/logo.jpg" alt="Logo">
+    </div>
+    <div class="app__name">
+      GhostGuardVPN
+    </div>
+  </div>
+</div>
+
+<div class="gif">
+  <img src="img/AnimatedSticker.gif" alt="GIF">
+</div>
+
+<div class="checkout__size">
+  <h1>У вас нет активной подписки</h1>
+  <p>Выберите сервер</p>
+</div>
+
+<div class="select">
+  <select name="" id="serverSelect">
+    <option value="Нидерланды">Нидерланды</option>
+    <option value="Америка" disabled>Америка (soon)</option>
+    <option value="Германия" disabled>Германия (soon)</option>
+  </select>
+</div>
+
+<div class="button-container">
+  <button id="serverBtn" class="tariff-button">Перейти к выбору тарифа</button>
+</div>
+
+<!-- Элемент для отображения индикатора загрузки -->
+<div id="loadingOverlay">
+  <div class="spinner">
+    <img src="lod.gif" alt="Loading">
+  </div>
+</div>
+
+<script>
+  function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'block';
+  }
+
+  function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+  }
+
+  window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+
+    if (userId) {
+      localStorage.setItem('user_id', userId);
+      showLoading();
+
+      fetch('https://ghostguardvpn.online:5001/check_user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: userId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.exists) {
+          localStorage.setItem('user_exists', 'true');
+          console.log('User exists set to true');
+          if (data.hasKey) {
+            fetch('https://ghostguardvpn.online:5001/get_key', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ userId: userId })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.key) {
+                localStorage.setItem('accessUrl', data.key);
+                console.log('Сохраненный ключ:', data.key);  // Отладочное сообщение
+                window.location.href = 'user.html';
+              } else {
+                console.log('Ключ не найден');
+              }
+            })
+            .catch(error => {
+              console.error('Ошибка получения ключа:', error);
+            })
+            .finally(() => {
+              hideLoading();
+            });
+          } else {
+            console.log('User ID найден, но ключ отсутствует.');
+            hideLoading();
+          }
+        } else {
+          localStorage.setItem('user_exists', 'false');
+          console.log('User ID не найден в базе данных.');
+          hideLoading();
+        }
+        console.log('user_exists:', localStorage.getItem('user_exists')); // Выводим значение user_exists в консоль
+      })
+      .catch(error => {
+        console.error('Ошибка проверки user_id:', error);
+        hideLoading();
+      });
+    } else {
+      console.error('User ID не найден в URL.');
+    }
+  };
+
+  document.getElementById("serverBtn").addEventListener("click", function() {
+    var selectedServer = document.getElementById("serverSelect").value;
+    localStorage.setItem("selectedServer", selectedServer);
+    window.location.href = "pay.html";
+  });
+
+  document.addEventListener('click', function(event) {
+    var dropdown = document.querySelector('.dropdown');
+    var dropdownContent = document.getElementById('dropdownContent');
+    if (!dropdown.contains(event.target)) {
+      dropdownContent.style.display = 'none';
+    }
+  });
+
+  // Модальное окно
+  var modal = document.getElementById("contactModal");
+  var btn = document.getElementById("contactBtn");
+  var span = document.getElementsByClassName("close")[0];
+
+  btn.onclick = function() {
+    modal.style.display = "block";
+  }
+
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+</script>
+</body>
+</html>

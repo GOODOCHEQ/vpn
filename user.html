@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebApp</title>
+    <link rel="stylesheet" href="user.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .tariff-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            margin: 5px 15px; /* Делаем отступ слева и справа равным */
+            width: calc(100% - 30px); /* Уменьшаем ширину на 30px */
+            box-sizing: border-box;
+        }
+        .tariff-button:hover {
+            background-color: #0056b3;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        #customAlert {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border: 1px solid #888;
+            padding: 20px;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        #customAlert p {
+            color: black;
+            margin: 0;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        #customAlert button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #customAlert button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top__block">
+            <div class="app__logo">
+                <img src="img/logo.jpg" alt="Logo">
+            </div>
+            <div class="app__name">GhostGuardVPN</div>
+        </div>
+    </div>
+    <div class="gif">
+        <img src="img/emojibest_com_AnimatedSticker.gif" alt="GIF">
+    </div>
+    <div class="checkout__size">
+        <h1>Готово к подключению</h1>
+        <p>Загрузите приложение а затем нажмите на кнопку Подключится, так же Вы можете вручную добавить код в приложении скопировав его.</p>
+    </div>
+    <div class="button-container">
+        <a id="connectLink" class="tariff-button" href="#" target="_blank">Подключиться</a>
+        <div class="empty-block"></div>
+        <div class="dropdown">
+            <button class="tariff-button" id="dropdownButton">&#8595; Скачать приложение</button>
+            <div class="dropdown-content">
+                <a href="https://apps.apple.com/ru/app/outline-app/id1356177741" class="download-link" data-os="ios" target="_blank">
+                    <img src="ios-icon.png">
+                    <span>iOS</span>
+                </a>
+                <a href="https://apps.apple.com/ru/app/outline-secure-internet-access/id1356178125?mt=12" class="download-link" data-os="macos" target="_blank">
+                    <img src="macos-icon.png">
+                    <span>macOS</span>
+                </a>
+                <a href="https://s3.amazonaws.com/outline-releases/client/windows/stable/Outline-Client.exe" class="download-link" data-os="windows" target="_blank">
+                    <img src="windows-icon.png">
+                    <span>Windows</span>
+                </a>
+                <a href="https://s3.amazonaws.com/outline-releases/client/linux/stable/Outline-Client.AppImage" class="download-link" data-os="linux" target="_blank">
+                    <img src="linux-icon.png">
+                    <span>Linux</span>
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=org.outline.android.client" class="download-link" data-os="android" target="_blank">
+                    <img src="android-icon.png">
+                    <span>Android</span>
+                </a>
+            </div>
+        </div>
+        <button class="tariff-button" id="copyKeyButton">Скопировать ключ</button>
+    </div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="modalText">Ссылка на сервер:</p>
+            <a id="serverLink" href="#" target="_blank">Подключить сервер</a>
+        </div>
+    </div>
+
+    <div id="customAlert">
+        <p id="alertText">Ключ скопирован в буфер обмена</p>
+        <button onclick="closeCustomAlert()">OK</button>
+    </div>
+
+    <script>
+        // Функция для показа пользовательского уведомления
+        function showCustomAlert(message) {
+            var alertBox = document.getElementById('customAlert');
+            var alertText = document.getElementById('alertText');
+            alertText.textContent = message;
+            alertBox.style.display = 'block';
+
+            // Закрыть окно при клике вне его
+            document.addEventListener('click', function(event) {
+                if (!alertBox.contains(event.target)) {
+                    closeCustomAlert();
+                }
+            });
+        }
+
+        // Функция для скрытия пользовательского уведомления
+        function closeCustomAlert() {
+            var alertBox = document.getElementById('customAlert');
+            alertBox.style.display = 'none';
+        }
+
+        // Обновленная функция копирования ключа в буфер обмена
+        function copyKeyToClipboard() {
+            var accessUrl = localStorage.getItem('accessUrl');
+            if (accessUrl) {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(accessUrl).then(function() {
+                        showCustomAlert('Ключ скопирован в буфер обмена');
+                    }).catch(function(err) {
+                        console.error('Не удалось скопировать ключ: ', err);
+                        showCustomAlert('Не удалось скопировать ключ');
+                    });
+                } else {
+                    var textArea = document.createElement("textarea");
+                    textArea.value = accessUrl;
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        showCustomAlert('Ключ скопирован в буфер обмена');
+                    } catch (err) {
+                        console.error('Не удалось скопировать ключ: ', err);
+                        showCustomAlert('Не удалось скопировать ключ');
+                    }
+                    document.body.removeChild(textArea);
+                }
+            } else {
+                showCustomAlert('Ключ не найден');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var dropdownButton = document.getElementById('dropdownButton');
+            if (dropdownButton) {
+                dropdownButton.addEventListener('click', toggleDropdown);
+            }
+
+            var copyKeyButton = document.getElementById('copyKeyButton');
+            if (copyKeyButton) {
+                copyKeyButton.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    copyKeyToClipboard();
+                });
+                // Добавляем обработчик touchend для мобильных устройств
+                copyKeyButton.addEventListener('touchend', function(event) {
+                    event.preventDefault();
+                    copyKeyToClipboard();
+                });
+            }
+
+            // Отображаем данные сервера из localStorage или сообщение об отсутствии данных
+            var selectedServer = localStorage.getItem('selectedServer');
+            var accessUrl = localStorage.getItem('accessUrl');
+            var connectLinkElement = document.getElementById('connectLink');
+            var serverLinkElement = document.getElementById('serverLink');
+
+            console.log('Access URL from localStorage:', accessUrl);  // Отладочное сообщение
+
+            if (accessUrl) {
+                if (connectLinkElement) {
+                    connectLinkElement.href = accessUrl;
+                }
+                if (serverLinkElement) {
+                    serverLinkElement.href = accessUrl;
+                }
+            } else {
+                console.log('Access URL not found in localStorage');
+                if (serverLinkElement) {
+                    serverLinkElement.textContent = 'Ссылка не найдена';
+                    serverLinkElement.href = '#';
+                }
+                if (connectLinkElement) {
+                    connectLinkElement.href = '#';
+                }
+            }
+
+            // Закрытие модального окна
+            var modal = document.getElementById('myModal');
+            var closeBtn = document.getElementsByClassName('close')[0];
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    modal.style.display = 'none';
+                }
+            }
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        });
+
+        // Открывает или закрывает выпадающее меню
+        function toggleDropdown() {
+            var dropdownContent = document.querySelector('.dropdown-content');
+            dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Добавляем обработчик события клика вне выпадающего меню для его закрытия
+        document.addEventListener('click', function(event) {
+            var dropdownContent = document.querySelector('.dropdown-content');
+            var dropdownButton = document.getElementById('dropdownButton');
+
+            if (dropdownContent && dropdownButton && event.target !== dropdownButton && !dropdownContent.contains(event.target)) {
+                dropdownContent.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

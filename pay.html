@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN WEB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .notification {
+            display: none;
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">
+        <i class="fas fa-times"></i>
+    </a>
+
+    <h1 class="subscription-title" id="subscriptionTitle">Выбор тарифа</h1>
+    <div class="step-container">
+        <div class="step active">
+            <div class="step-name">Выбор плана</div>
+            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+        </div>
+        <div class="step">
+            <div class="step-name">Оплата</div>
+            <div class="step-icon"><i class="far fa-circle"></i></div>
+        </div>
+        <div class="step">
+            <div class="step-name">Подтверждение</div>
+            <div class="step-icon"><i class="far fa-circle"></i></div>
+        </div>
+    </div>
+    <div class="plan-block">
+        <div class="plan" data-plan="5 дней">
+            <div class="radio"></div>
+            <div class="details">
+                <div class="name">5 дней</div>
+                <div class="price">
+                    <span class="old-price">₽199</span> ₽0 / 5 дней бесплатно
+                </div>
+            </div>
+            <div class="badge">Бесплатно</div>
+        </div>
+        <div class="plan" data-plan="1 месяц">
+            <div class="radio"></div>
+            <div class="details">
+                <div class="name">1 месяц</div>
+                <div class="price">
+                    <span class="old-price">₽400</span> ₽199 / 1 месяц
+                </div>
+            </div>
+            <div class="badge">-50%</div>
+        </div>
+        <div class="plan" data-plan="3 месяца">
+            <div class="radio"></div>
+            <div class="details">
+                <div class="name">3 месяца</div>
+                <div class="price">
+                    <span class="old-price">₽600</span> ₽499 / 3 месяца
+                </div>
+            </div>
+            <div class="badge">-17%</div>
+        </div>
+        <div class="plan" data-plan="6 месяцев">
+            <div class="radio"></div>
+            <div class="details">
+                <div class="name">6 месяцев</div>
+                <div class="price">
+                    <span class="old-price">₽1200</span> ₽899 / 6 месяцев
+                </div>
+            </div>
+            <div class="badge">-25%</div>
+        </div>
+        <div class="plan" data-plan="1 год">
+            <div class="radio"></div>
+            <div class="details">
+                <div class="name">1 год</div>
+                <div class="price">
+                    <span class="old-price">₽2400</span> ₽1199 / 1 год
+                </div>
+            </div>
+            <div class="badge">-50%</div>
+        </div>
+    </div>
+    <div class="notification" id="notification">Вы уже воспользовались бесплатным доступом.</div>
+    <div class="payment-block" style="display: none;">
+        <div class="payment-options">
+            <div class="payment-option" data-payment="Банковская карта">
+                <div class="radio">
+                    <i class="far fa-circle"></i>
+                </div>
+                <div class="details">
+                    <div class="name">Банковская карта</div>
+                </div>
+            </div>
+            <div class="payment-option" data-payment="Telegram Stars">
+                <div class="radio">
+                    <i class="far fa-circle"></i>
+                </div>
+                <div class="details">
+                    <div class="name">Telegram Stars</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="selected-options" style="display: none;">
+        <div class="selected-server"></div>
+        <div class="selected-plan"></div>
+        <div class="selected-payment"></div>
+        <button class="send-data-btn">Получить доступ к VPN</button>
+    </div>
+    <div class="next-btn-container">
+        <button class="next-btn" id="nextButton" disabled>Далее</button>
+    </div>
+
+    <script>
+        const userExists = localStorage.getItem('user_exists') === 'true';
+        console.log('User exists on page load:', userExists);
+
+        const plans = document.querySelectorAll('.plan');
+        const selectedServer = document.querySelector('.selected-server');
+        const nextButton = document.getElementById('nextButton');
+        const planBlock = document.querySelector('.plan-block');
+        const paymentBlock = document.querySelector('.payment-block');
+        const steps = document.querySelectorAll('.step');
+        const sendDataBtn = document.querySelector('.send-data-btn');
+        const subscriptionTitle = document.getElementById('subscriptionTitle');
+        const selectedOptions = document.querySelector('.selected-options');
+        const notification = document.getElementById('notification');
+
+        let currentStep = 0;
+
+        plans.forEach(plan => {
+            plan.addEventListener('click', () => {
+                plans.forEach(p => p.classList.remove('selected'));
+                plan.classList.add('selected');
+                nextButton.disabled = false;
+                nextButton.style.backgroundColor = '#007bff';
+                nextButton.style.color = '#fff';
+                const selectedPlan = plan.querySelector('.name').textContent;
+                localStorage.setItem('selectedPlan', selectedPlan);
+                console.log('Selected plan:', selectedPlan);
+            });
+        });
+
+        nextButton.addEventListener('click', () => {
+            const selectedPlan = localStorage.getItem('selectedPlan');
+            console.log('Next button clicked. Current step:', currentStep);
+            console.log('Selected plan on next button click:', selectedPlan);
+            console.log('User exists:', userExists);
+
+            if (currentStep === 0) {
+                if (selectedPlan === '5 дней' && userExists) {
+                    console.log('User already used free plan. Showing notification.');
+                    notification.style.display = 'block';
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                    }, 5000);
+                    return;
+                } else if (selectedPlan === '5 дней') {
+                    planBlock.style.display = 'none';
+                    paymentBlock.style.display = 'none';
+                    selectedServer.textContent = 'Выбранный сервер: ' + localStorage.getItem('selectedServer');
+                    const selectedPlanField = document.querySelector('.selected-plan');
+                    selectedPlanField.textContent = 'Выбранный план: ' + selectedPlan;
+                    selectedOptions.style.display = 'block';
+                    document.querySelector('.selected-payment').style.display = 'none';
+                    subscriptionTitle.textContent = 'Все верно?';
+                    steps[2].classList.add('active');
+                    document.querySelectorAll('.step-icon')[2].innerHTML = '<i class="fas fa-check-circle"></i>';
+                    nextButton.textContent = 'Получить доступ';
+                    nextButton.style.display = 'none';
+                    sendDataBtn.style.display = 'block';
+                } else {
+                    planBlock.style.display = 'none';
+                    paymentBlock.style.display = 'block';
+                    subscriptionTitle.textContent = 'Варианты оплаты';
+                    currentStep++;
+                    steps[currentStep].classList.add('active');
+                    document.querySelectorAll('.step-icon')[currentStep].innerHTML = '<i class="fas fa-check-circle"></i>';
+                }
+            } else if (currentStep === 1) {
+                const selectedPaymentOption = document.querySelector('.payment-option.selected');
+                if (selectedPaymentOption) {
+                    const selectedPayment = selectedPaymentOption.querySelector('.name').textContent;
+                    localStorage.setItem('selectedPayment', selectedPayment);
+                    console.log('Selected payment:', selectedPayment);
+                    if (!localStorage.getItem('selectedServer')) {
+                        alert('Selected Server не найден в localStorage');
+                        return;
+                    }
+                    if (!localStorage.getItem('selectedPlan')) {
+                        alert('Selected Plan не найден в localStorage');
+                        return;
+                    }
+                    if (!localStorage.getItem('selectedPayment')) {
+                        alert('Selected Payment не найден в localStorage');
+                        return;
+                    }
+                    planBlock.style.display = 'none';
+                    paymentBlock.style.display = 'none';
+                    const selectedPlanField = document.querySelector('.selected-plan');
+                    const selectedPaymentField = document.querySelector('.selected-payment');
+                    selectedServer.textContent = 'Выбранный сервер: ' + localStorage.getItem('selectedServer');
+                    selectedPlanField.textContent = 'Выбранный план: ' + selectedPlan;
+                    selectedPaymentField.textContent = 'Выбранный способ оплаты: ' + selectedPayment;
+                    selectedOptions.style.display = 'block';
+                    subscriptionTitle.textContent = 'Все верно?';
+                    steps[2].classList.add('active');
+                    document.querySelectorAll('.step-icon')[2].innerHTML = '<i class="fas fa-check-circle"></i>';
+                    nextButton.textContent = 'Перейти к оплате';
+                    nextButton.style.display = 'none';
+                    sendDataBtn.style.display = 'block';
+                } else {
+                    alert('Пожалуйста, выберите способ оплаты');
+                }
+            }
+        });
+
+        const paymentOptions = document.querySelectorAll('.payment-option:not(.disabled)');
+        let selectedPaymentMethod = '';
+
+        paymentOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                paymentOptions.forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                nextButton.style.backgroundColor = '#007bff';
+                nextButton.style.color = '#fff';
+                selectedPaymentMethod = option.getAttribute('data-payment');
+                localStorage.setItem('selectedPayment', selectedPaymentMethod);
+                console.log('Selected payment:', selectedPaymentMethod);
+            });
+        });
+
+        sendDataBtn.addEventListener('click', () => {
+            const selectedPlan = localStorage.getItem('selectedPlan');
+            const selectedPayment = localStorage.getItem('selectedPayment');
+            
+            console.log('Send data button clicked. Selected plan:', selectedPlan);
+            console.log('Selected payment method:', selectedPayment);
+
+            if (!selectedPayment) {
+                alert('Пожалуйста, выберите способ оплаты');
+                return;
+            }
+
+            if (selectedPayment === 'Банковская карта') {
+                if (selectedPlan === '1 месяц') {
+                    window.location.href = 'pay1m.html';
+                } else if (selectedPlan === '3 месяца') {
+                    window.location.href = 'pay3m.html';
+                } else if (selectedPlan === '6 месяцев') {
+                    window.location.href = 'pay6m.html';
+                } else if (selectedPlan === '1 год') {
+                    window.location.href = 'pay12m.html';
+                } else {
+                    window.location.href = 'good.html';
+                }
+            } 
+            else if (selectedPayment === 'Telegram Stars') {
+                alert('Оплата через Telegram Stars началась!');
+                startTelegramStarsPayment();
+            }
+        });
+
+        function startTelegramStarsPayment() {
+            console.log('Оплата через Telegram Stars');
+            // Реализуйте логику оплаты через Telegram Stars
+        }
+    </script>
+</body>
+</html>

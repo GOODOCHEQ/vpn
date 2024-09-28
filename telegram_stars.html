@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата через Telegram Stars</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>Оплата через Telegram Stars</h1>
+    <p>Для завершения оплаты через Telegram Stars нажмите кнопку ниже:</p>
+
+    <button id="payWithTelegramStars">Заплатить через Telegram Stars</button>
+
+    <script>
+        // Получаем выбранный план из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedPlan = urlParams.get('plan');
+
+        // Устанавливаем цены для разных тарифов (в копейках, т.е. ₽199 -> 19900 копеек)
+        const planPrices = {
+            "1 месяц": 19900, // Цена в копейках
+            "3 месяца": 49900,
+            "6 месяцев": 89900,
+            "1 год": 119900
+        };
+
+        document.getElementById('payWithTelegramStars').addEventListener('click', function() {
+            if (selectedPlan && planPrices[selectedPlan]) {
+                const amount = planPrices[selectedPlan];
+                
+                // Инициализируем Telegram WebApp
+                Telegram.WebApp.init();
+
+                // Открываем инвойс для оплаты через Telegram Stars
+                Telegram.WebApp.openInvoice({
+                    description: 'Оплата подписки VPN на ' + selectedPlan,
+                    currency: 'RUB',
+                    total_amount: amount, // Сумма в копейках
+                    payload: 'vpn_subscription_' + selectedPlan,
+                    // Функция, срабатывающая после успешной оплаты
+                    start_param: 'good',
+                    callback: function(response) {
+                        if (response.status === 'paid') {
+                            // Если оплата прошла успешно, перенаправляем на страницу подтверждения
+                            window.location.href = 'good.html';
+                        } else {
+                            alert('Ошибка оплаты. Попробуйте снова.');
+                        }
+                    }
+                });
+            } else {
+                alert('Неверный тариф или цена.');
+            }
+        });
+    </script>
+</body>
+</html>
